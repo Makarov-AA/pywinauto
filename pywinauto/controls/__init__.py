@@ -37,9 +37,14 @@ from . import qt5_controls
 from . import qt6_controls
 
 if sys.platform.startswith('linux'):
-    from . import atspiwrapper  # register "atspi" back-end
-    from . import atspi_controls
-    from .atspiwrapper import InvalidWindowHandle
+    class InvalidWindowHandle(Exception):
+        pass
+
+    def ensure_atspi_backend_registered():
+        """Register the AT-SPI backend on first use."""
+        from . import atspiwrapper  # register "atspi" back-end
+        from . import atspi_controls
+        globals()["InvalidWindowHandle"] = atspiwrapper.InvalidWindowHandle
 else:
     from ..sysinfo import UIA_support
     if UIA_support:

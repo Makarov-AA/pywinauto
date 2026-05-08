@@ -59,6 +59,9 @@ class Application(BaseApplication):
         self.match_history = []
         self.use_history = False
         self.actions = None  # TODO Action logger for linux
+        if backend == "atspi":
+            from ..controls import ensure_atspi_backend_registered
+            ensure_atspi_backend_registered()
         if backend not in registry.backends:
             raise ValueError('Backend "{0}" is not registered!'.format(backend))
         self.backend = registry.backends[backend]
@@ -67,9 +70,12 @@ class Application(BaseApplication):
     def start(self, cmd_line, timeout=None, retry_interval=None,
               create_new_console=False, wait_for_idle=True, work_dir=None):
         """Start the application as specified by cmd_line"""
-        command_line = shlex.split(cmd_line)
+        if isinstance(cmd_line, str) and os.path.exists(cmd_line):
+            command_line = [cmd_line]
+        else:
+            command_line = shlex.split(cmd_line)
         try:
-            process = subprocess.Popen(command_line, shell=create_new_console)
+            process = subprocess.Popen(command_line, shell=create_new_console, cwd=work_dir)
         except Exception as exc:
             # if it failed for some reason
             message = ('Could not create the process "%s"\n'

@@ -115,7 +115,12 @@ class Desktop(object):
 
     def __init__(self, backend=None, allow_magic_lookup=True):
         """Create desktop element description"""
-        if not backend:
+        if sys.platform.startswith('linux') and backend in (None, 'atspi'):
+            from .controls import ensure_atspi_backend_registered
+            ensure_atspi_backend_registered()
+            if backend is None:
+                backend = 'atspi'
+        elif not backend:
             backend = backends.registry.name
         if backend not in backends.registry.backends:
             raise ValueError('Backend "{0}" is not registered!'.format(backend))
